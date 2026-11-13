@@ -1,371 +1,355 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ランニング音声コーチング・プロトタイプ</title>
-    <!-- Leaflet CSS (地図用) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --accent-green: #00e676;
-            --accent-red: #ff5252;
-            --accent-blue: #29b6f6;
-            --border-color: #333;
-        }
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 15px;
-        }
-        h1 { font-size: 1.2rem; text-align: center; margin-bottom: 10px; color: #fff; }
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            text-align: center;
-        }
-        .metric-box {
-            background: #2a2a2a;
-            padding: 10px;
-            border-radius: 8px;
-        }
-        .metric-value { font-size: 1.5rem; font-weight: bold; color: var(--accent-green); }
-        .metric-label { font-size: 0.8rem; color: #aaa; }
-        
-        #map {
-            width: 100%;
-            height: 200px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        button {
-            flex: 1;
-            padding: 15px;
-            font-size: 1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .btn-start { background-color: var(--accent-green); color: #000; }
-        .btn-stop { background-color: var(--accent-red); color: #fff; }
-        .btn-sim { background-color: var(--accent-blue); color: #000; margin-top: 10px; width: 100%; }
-
-        .settings-section h2 { font-size: 1rem; margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
-        label { display: block; font-size: 0.85rem; margin-top: 8px; color: #ccc; }
-        input, select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 4px;
-            background: #2a2a2a;
-            border: 1px solid var(--border-color);
-            color: #fff;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .log-box {
-            background: #000;
-            padding: 10px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 0.8rem;
-            height: 80px;
-            overflow-y: auto;
-            color: var(--accent-green);
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#050607">
+<title>NOAH RUN COACH</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{color-scheme:dark;--bg:#050607;--panel:#111519;--line:#2b343d;--muted:#9aa6b2;--green:#72e0a0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#f4f7fa;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:env(safe-area-inset-top) 14px calc(18px + env(safe-area-inset-bottom))}
+main{max-width:720px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;padding:15px 2px}
+h1{font-size:19px;letter-spacing:.08em;margin:0}
+.sub,.hint,.tiny{color:var(--muted);font-size:12px;line-height:1.6}
+.pill{border:1px solid #345744;color:var(--green);padding:6px 10px;border-radius:99px;font-size:11px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.metric{background:#090d10;border-radius:13px;padding:12px}
+.metric small{display:block;color:var(--muted)}
+.metric strong{font-size:clamp(30px,8vw,43px);font-variant-numeric:tabular-nums}
+.metric em{font-style:normal;color:var(--muted);font-size:12px}
+.progress{height:8px;background:#273039;border-radius:20px;overflow:hidden;margin-top:12px}
+.progress span{display:block;height:100%;width:0;background:var(--green)}
+.controls,.grid2,.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.controls{grid-template-columns:repeat(3,1fr)}
+button{border:0;border-radius:13px;padding:14px 8px;min-height:52px;font-weight:750;background:var(--green);color:#07100b;cursor:pointer}
+button.secondary{background:#28313a;color:white}
+button.danger{background:#52282b;color:white}
+button:disabled{opacity:.35}
+.section-title{display:flex;justify-content:space-between;font-weight:750;margin-bottom:12px}
+.section-title small{font-weight:400;color:var(--muted)}
+.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:#080c0f;border:1px solid var(--line);border-radius:10px;color:white;padding:11px;min-height:44px;font:inherit}
+.field textarea{min-height:70px}
+.row{display:flex;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.row label{display:flex;align-items:center;gap:8px;font-size:13px}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--green)}
+.status{color:var(--green);font-size:13px;min-height:20px;margin-top:9px}
+.hidden{display:none!important}
+#map{height:220px;border-radius:12px;overflow:hidden}
+.rule{border-top:1px solid var(--line);padding:12px 0}
+.rule:first-child{border:0}
+.rulehead{display:flex;justify-content:space-between;font-size:13px}
+.rule button{min-height:37px;padding:8px;font-size:12px}
+.tag{font-size:10px;color:#79baff}
+.hint{margin-bottom:0}
+details summary{font-weight:750;cursor:pointer;padding-bottom:12px}
+footer{text-align:center;color:#68737d;font-size:10px;padding:8px}
+@media(min-width:600px){.metrics{grid-template-columns:repeat(4,1fr)}}
+</style>
 </head>
 <body>
+<main>
+<header>
+  <div><h1>NOAH RUN COACH</h1><div class="sub">走るあなたに、ちょうどいい声を。</div></div>
+  <span class="pill" id="badge">READY</span>
+</header>
 
-    <h1>🎙️ ランニング音声コーチング</h1>
+<section class="panel">
+  <div class="metrics">
+    <div class="metric"><small>走行距離</small><strong id="dist">0.00</strong><em> km</em></div>
+    <div class="metric"><small>現在ペース</small><strong id="pace">--:--</strong><em> /km・直近30秒</em></div>
+    <div class="metric"><small>経過時間</small><strong id="elapsed">00:00</strong><em> 時:分</em></div>
+    <div class="metric"><small>目標まで</small><strong id="remain">--</strong><em> km</em></div>
+  </div>
+  <div class="progress"><span id="bar"></span></div>
+  <div class="controls">
+    <button id="start">▶ 開始</button>
+    <button id="pause" class="secondary" disabled>Ⅱ 一時停止</button>
+    <button id="stop" class="danger" disabled>■ 終了</button>
+  </div>
+  <div class="status" id="status">設定して「開始」を押してください。</div>
+</section>
 
-    <!-- ダッシュボード -->
-    <div class="card">
-        <div class="metrics-grid">
-            <div class="metric-box">
-                <div class="metric-value" id="distDisplay">0.00</div>
-                <div class="metric-label">走行距離 (km)</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-value" id="paceDisplay">--'--"</div>
-                <div class="metric-label">現在ペース (/km)</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-value" id="timeDisplay">00:00</div>
-                <div class="metric-label">経過時間</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-value" id="statusDisplay">待機中</div>
-                <div class="metric-label">ステータス</div>
-            </div>
-        </div>
-        
-        <div class="btn-group">
-            <button class="btn-start" id="startBtn" onclick="startRunning()">ラン開始</button>
-            <button class="btn-stop" id="stopBtn" onclick="stopRunning()" disabled>終了</button>
-        </div>
-        <!-- 室内テスト用シミュレーションボタン -->
-        <button class="btn-sim" onclick="toggleSimulation()">🧪 デモ走行シミュレーター (室内テスト用)</button>
+<section class="panel">
+  <div class="section-title">ランニング設定 <small>開始後は固定</small></div>
+  <div class="grid2">
+    <div class="field"><label>目標距離（km）</label><input id="goal" type="number" min=".1" step=".1" value="21.1"></div>
+    <div class="field"><label>目標ペース（分/km）</label><input id="target" value="7:00" inputmode="decimal"></div>
+    <div class="field"><label>基本の声</label><select id="voice"><option value="coach">男のコーチ</option><option value="bright">明るい女性</option><option value="child">子供風</option><option value="announcer">実況アナウンサー</option></select></div>
+    <div class="field"><label>音量</label><input id="volume" type="range" min="0" max="1" step=".05" value=".9"></div>
+  </div>
+  <div class="row">
+    <label><input type="checkbox" id="mapToggle"> 地図を表示</label>
+    <label><input type="checkbox" id="wake" checked> スリープ防止</label>
+  </div>
+  <p class="hint">HTTPSで開き、位置情報を許可してください。声かけはGPSのブレを抑えるため直近30秒の平均ペースで判定します。</p>
+</section>
+
+<section class="panel hidden" id="mapPanel">
+  <div class="section-title">走行ルート <small id="accuracy">GPS待機中</small></div>
+  <div id="map"></div>
+</section>
+
+<section class="panel">
+  <div class="section-title">声援シナリオ <small>自由に編集・追加・削除</small></div>
+  <div class="grid2">
+    <div class="field"><label>プリセット</label><select id="preset"><option value="classic">王道・仲間たちの応援</option><option value="racing">競馬実況風</option><option value="quiet">静かに見守る</option><option value="komu">こむさん・レースモード</option></select></div>
+    <button id="load" class="secondary">読み込む</button>
+  </div>
+  <div id="rules"></div>
+  <button id="add" class="secondary" style="width:100%">＋ 声援ルールを追加</button>
+</section>
+
+<section class="panel">
+  <details>
+    <summary>詳細設定・音声テスト・デモ走行</summary>
+    <div class="grid2">
+      <div class="field"><label>速い/遅い判定の許容差（秒）</label><input id="threshold" type="number" value="20" min="5" max="120"></div>
+      <div class="field"><label>ペース声かけ間隔（分）</label><input id="cooldown" type="number" value="3" min="1" max="30"></div>
     </div>
-
-    <!-- 地図エリア -->
-    <div class="card">
-        <h2 style="font-size:0.9rem; margin:0 0 5px 0;">リアルタイム軌跡マップ</h2>
-        <div id="map"></div>
+    <div class="row">
+      <button id="testVoice" class="secondary">声をテスト</button>
+      <button id="testSound" class="secondary">ファンファーレ</button>
     </div>
-
-    <!-- 音声ログ -->
-    <div class="card">
-        <h2 style="font-size:0.9rem; margin:0 0 5px 0;">音声コーチ・ログ</h2>
-        <div class="log-box" id="logBox">アプリ起動完了。準備OKです。<br></div>
+    <div class="row">
+      <button id="demo" class="secondary">▶ デモ走行（GPS不要）</button>
+      <button id="stopDemo" class="danger" disabled>デモ停止</button>
     </div>
+    <p class="hint">デモでは距離とペースを自動で進め、声援のタイミングを確認できます。</p>
+  </details>
+</section>
 
-    <!-- 設定エリア -->
-    <div class="card settings-section">
-        <h2>⚙️ 走行・音声設定</h2>
-        <label>目標距離 (km)</label>
-        <input type="number" id="targetDist" value="5" step="0.5">
-        
-        <label>目標ペース (分/km - 例: 6.5なら6分30秒)</label>
-        <input type="number" id="targetPace" value="6.0" step="0.1">
+<footer>NOAH RUN COACH · 履歴は保存せず、シナリオ設定のみ端末内に保存します。</footer>
+</main>
 
-        <label>音声キャラクター・トーン</label>
-        <select id="voicePreset">
-            <option value="coach">男のコーチ (低め・力強い)</option>
-            <option value="woman" selected>若い女性 (高め・明るい)</option>
-            <option value="child">子供の声 (かなり高い・早口)</option>
-            <option value="announcer">競馬実況風 (ハイテンション)</option>
-        </select>
-    </div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),KEY='noahRunCoach.scenarios.v2';
+const profiles={coach:[.78,.94],bright:[1.42,1.08],child:[1.75,1.12],announcer:[1.05,1.28]};
+const uid=()=>Math.random().toString(36).slice(2,10);
+const base=()=>[
+  {id:uid(),type:'start',value:0,text:'よし、スタート！最初は落ち着いて、自分のリズムでいこう。',voice:'coach',sound:'none',enabled:true},
+  {id:uid(),type:'distance',value:3,text:'3キロ通過。いい感じ。まだ余裕を残していこう！',voice:'bright',sound:'none',enabled:true},
+  {id:uid(),type:'distance',value:7,text:'7キロ！いいリズムだよ。肩の力を抜いて！',voice:'coach',sound:'none',enabled:true},
+  {id:uid(),type:'half',value:50,text:'ここが折り返し。ここまで来た自分を信じよう！',voice:'bright',sound:'none',enabled:true},
+  {id:uid(),type:'fast',value:20,text:'ちょっと速いよ。今は抑えて後半に力を残そう。',voice:'coach',sound:'none',enabled:true},
+  {id:uid(),type:'slow',value:20,text:'少しペースが落ちているよ。無理せず呼吸とリズムを整えよう。',voice:'coach',sound:'none',enabled:true},
+  {id:uid(),type:'remaining',value:1,text:'残り1キロ！最後まで自分のペースで楽しもう！',voice:'announcer',sound:'fanfare',enabled:true},
+  {id:uid(),type:'finish',value:0,text:'ゴール！最後までよく走ったね。お疲れさま！',voice:'bright',sound:'fanfare',enabled:true}
+];
+const presets={
+  classic:base,
+  racing:()=>[
+    ['start',0,'各馬一斉にスタート！まずは落ち着いて隊列を整えます！','announcer','fanfare'],
+    ['distance',3,'3キロ通過！いい位置で脚をためています！','announcer','none'],
+    ['fast',20,'少し掛かっています！ここは折り合い重視で！','announcer','none'],
+    ['half',50,'勝負どころはまだ先！ここからも冷静に！','announcer','none'],
+    ['remaining',1,'さあ最後の直線！自分の脚を信じて！','announcer','fanfare'],
+    ['finish',0,'ゴールイン！見事な完走です！','announcer','fanfare']].map(a=>({id:uid(),type:a[0],value:a[1],text:a[2],voice:a[3],sound:a[4],enabled:true})),
+  quiet:()=>[['start',0,'今日は自分のための時間。気持ちよく始めよう。','coach'],['distance',5,'5キロ。いいペース。あとは景色も楽しんで。','bright'],['half',50,'半分まで来たよ。呼吸を整えて、淡々と。','coach'],['finish',0,'今日も走れたね。お疲れさま。','bright']].map(a=>({id:uid(),type:a[0],value:a[1],text:a[2],voice:a[3],sound:'none',enabled:true})),
+  komu:()=>[['start',0,'こむさん、今日は楽しんでいこう。周りに引っ張られず、自分のペースで。','coach'],['distance',3,'3キロ。焦らない。まだまだ先は長いよ。','coach'],['fast',15,'ちょっと速いよ。今日は前半を抑える約束だよ。','coach'],['half',50,'半分通過。ここからも歩かず、気持ちよくいこう。','bright'],['remaining',1,'あと1キロ。ここまで積み上げてきた走りを楽しもう！','announcer'],['finish',0,'完走！こむさん、最高の走りだったよ。お疲れさま！','bright']].map(a=>({id:uid(),type:a[0],value:a[1],text:a[2],voice:a[3],sound:a[0]==='finish'?'fanfare':'none',enabled:true}))
+};
 
-    <!-- Leaflet JS (地図用) -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        let isRunning = false;
-        let startTime = null;
-        let timerInterval = null;
-        let watchId = null;
-        let totalDistance = 0; // meters
-        let lastPosition = null;
-        let routeCoordinates = [];
-        let map, polyline, marker;
-        
-        // シミュレーション用
-        let isSimulating = false;
-        let simInterval = null;
+let rules;try{rules=JSON.parse(localStorage.getItem(KEY))||base()}catch{rules=base()}
+let mode='ready',meters=0,elapsed=0,startAt=0,watch=null,lock=null,lastPos=null,samples=[],fired=new Set(),lastPaceAlert=0,demoTimer=null,map=null,line=null,pin=null;
+const names={start:'スタート直後',distance:'指定距離',half:'中間地点',remaining:'残り距離',fast:'速すぎ判定',slow:'遅すぎ判定',finish:'ゴール達成'};
 
-        // Wake Lock
-        let wakeLock = null;
+function save(){localStorage.setItem(KEY,JSON.stringify(rules))}
+function render(){
+  const box=$('rules');box.innerHTML='';
+  rules.forEach((r,i)=>{
+    const d=document.createElement('div');d.className='rule';
+    d.innerHTML=`<div class="rulehead"><b>${i+1}. ${names[r.type]}</b><span class="tag">${r.enabled?'ON':'OFF'}</span></div><div class="grid2" style="margin-top:8px"><div class="field"><label>トリガー</label><select data-k="type"><option value="start">スタート直後</option><option value="distance">指定距離通過</option><option value="half">中間地点</option><option value="remaining">残り距離</option><option value="fast">速すぎ</option><option value="slow">遅すぎ</option><option value="finish">ゴール</option></select></div><div class="field"><label>距離 km / 判定秒</label><input data-k="value" type="number" step=".1" value="${r.value}"></div><div class="field"><label>声</label><select data-k="voice"><option value="coach">男のコーチ</option><option value="bright">明るい女性</option><option value="child">子供風</option><option value="announcer">実況アナウンサー</option></select></div><div class="field"><label>効果音</label><select data-k="sound"><option value="none">なし</option><option value="fanfare">ファンファーレ</option></select></div></div><div class="field" style="margin-top:8px"><label>セリフ</label><textarea data-k="text"></textarea></div><div class="row"><label><input data-k="enabled" type="checkbox"> 有効</label><button class="secondary" data-action="test">声を試す</button><button class="danger" data-action="delete">削除</button></div>`;
+    d.querySelector('[data-k=type]').value=r.type;
+    d.querySelector('[data-k=voice]').value=r.voice;
+    d.querySelector('[data-k=sound]').value=r.sound;
+    d.querySelector('[data-k=text]').value=r.text;
+    d.querySelector('[data-k=enabled]').checked=r.enabled;
+    d.querySelectorAll('[data-k]').forEach(x=>x.onchange=()=>{let k=x.dataset.k;r[k]=k==='enabled'?x.checked:k==='value'?Number(x.value):x.value;save();render()});
+    d.querySelector('[data-action=delete]').onclick=()=>{rules.splice(i,1);save();render()};
+    d.querySelector('[data-action=test]').onclick=()=>play(r);
+    box.append(d);
+  });
+}
 
-        // 音声プリセットの設定値 (Web Speech APIの pitch, rate)
-        const voicePresets = {
-            coach:     { pitch: 0.6, rate: 1.0, label: "男のコーチ" },
-            woman:     { pitch: 1.3, rate: 1.1, label: "若い女性" },
-            child:     { pitch: 1.8, rate: 1.3, label: "子供の声" },
-            announcer: { pitch: 1.0, rate: 1.4, label: "競馬実況風" }
-        };
+// iOS Safari対応の音声合成ラッパー（アンロック処理・キュー整理含む）
+function speak(text,voice='coach'){
+  if(!('speechSynthesis'in window))return;
+  speechSynthesis.cancel();
+  let u=new SpeechSynthesisUtterance(text),p=profiles[voice]||profiles.coach;
+  u.lang='ja-JP';u.pitch=p[0];u.rate=p[1];u.volume=+$('volume').value;
+  let voices=speechSynthesis.getVoices();
+  let ja=voices.find(v=>v.lang==='ja-JP'||v.lang==='ja_JP')||voices.find(v=>v.lang.startsWith('ja'));
+  if(ja)u.voice=ja;
+  speechSynthesis.speak(u);
+}
 
-        // 初期マップ設定
-        function initMap() {
-            // 名古屋駅あたりを初期中心に
-            map = L.map('map').setView([35.1709, 136.8815], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-            polyline = L.polyline([], {color: '#00e676', weight: 4}).addTo(map);
-        }
-        initMap();
+// 音声の事前暖機（iOS Safariで最初の発声を有効化するため）
+function warmupSpeech(){
+  if('speechSynthesis'in window){
+    let u=new SpeechSynthesisUtterance('');
+    u.volume=0;
+    speechSynthesis.speak(u);
+  }
+}
 
-        // ログ出力 ＆ 音声発話
-        function speak(text, customPresetKey = null) {
-            const logBox = document.getElementById('logBox');
-            logBox.innerHTML += `> ${text}<br>`;
-            logBox.scrollTop = logBox.scrollHeight;
+function fanfare(){
+  try{
+    let C=window.AudioContext||window.webkitAudioContext,c=new C(),t=c.currentTime;
+    [523,659,784,1047].forEach((f,i)=>{
+      let o=c.createOscillator(),g=c.createGain();
+      o.type='triangle';o.frequency.value=f;
+      g.gain.setValueAtTime(.001,t+i*.13);
+      g.gain.exponentialRampToValueAtTime(.15,t+i*.13+.03);
+      g.gain.exponentialRampToValueAtTime(.001,t+i*.13+.32);
+      o.connect(g);g.connect(c.destination);
+      o.start(t+i*.13);o.stop(t+i*.13+.35);
+    });
+    setTimeout(()=>c.close(),1600);
+  }catch(e){}
+}
+function play(r){if(r.sound==='fanfare')fanfare();if(r.text)speak(r.text,r.voice)}
+// 【将来のMP3対応拡張用】
+// function playMp3(url){ let audio = new Audio(url); audio.volume = +$('volume').value; audio.play(); }
 
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // 喋りかけをクリア
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'ja-JP';
+function status(s){$('status').textContent=s}
+function parse(v){let m=String(v).trim().match(/^(\d{1,2}):([0-5]\d)$/);return m?+m[1]*60+(+m[2]):NaN}
+function fmt(s){if(!Number.isFinite(s)||s<=0)return'--:--';s=Math.round(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function clock(s){s=Math.floor(s);return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor(s%3600/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function pace(){if(samples.length<2)return NaN;let a=samples[0],b=samples[samples.length-1],dm=b.m-a.m,dt=(b.t-a.t)/1000;return dm>0&&dt>0?dt/(dm/1000):NaN}
+function ui(){let km=meters/1000,g=+$('goal').value||0;$('dist').textContent=km.toFixed(2);$('pace').textContent=fmt(pace());$('elapsed').textContent=clock(elapsed+(mode==='run'?(Date.now()-startAt)/1000:0));$('remain').textContent=Math.max(0,g-km).toFixed(2);$('bar').style.width=(g?Math.min(100,km/g*100):0)+'%'}
+function sample(t){samples.push({m:meters,t});while(samples.length&&t-samples[0].t>30000)samples.shift()}
+function trigger(r){if(fired.has(r.id))return;fired.add(r.id);play(r)}
 
-                const presetKey = customPresetKey || document.getElementById('voicePreset').value;
-                const preset = voicePresets[presetKey] || voicePresets.woman;
-                
-                utterance.pitch = preset.pitch;
-                utterance.rate = preset.rate;
+function check(){
+  let km=meters/1000,g=+$('goal').value,target=parse($('target').value),p=pace(),now=Date.now();
+  rules.forEach(r=>{
+    if(!r.enabled)return;
+    if(r.type==='start'&&km>.015)trigger(r);
+    if(r.type==='distance'&&km>=r.value)trigger(r);
+    if(r.type==='half'&&km>=g*.5)trigger(r);
+    if(r.type==='remaining'&&g-km<=r.value)trigger(r);
+    if(r.type==='finish'&&km>=g)trigger(r);
+    if((r.type==='fast'||r.type==='slow')&&Number.isFinite(p)&&Number.isFinite(target)){
+      let diff=p-target,th=+$('threshold').value||20,cool=(+$('cooldown').value||3)*60000;
+      if(now-lastPaceAlert>=cool&&((r.type==='fast'&&diff< -th)||(r.type==='slow'&&diff>th))){lastPaceAlert=now;play(r)}
+    }
+  });
+}
 
-                window.speechSynthesis.speak(utterance);
-            }
-        }
+const rad=x=>x*Math.PI/180;
+function dist(a,b){let R=6371000,d1=rad(b.lat-a.lat),d2=rad(b.lng-a.lng),x=Math.sin(d1/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function initMap(){if(map||!window.L)return;map=L.map('map').setView([35.1815,136.9066],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);line=L.polyline([],{color:'#72e0a0',weight:5}).addTo(map)}
+$('mapToggle').onchange=()=>{$('mapPanel').classList.toggle('hidden',!$('mapToggle').checked);if($('mapToggle').checked){initMap();setTimeout(()=>map&&map.invalidateSize(),150)}};
 
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock acquired');
-                }
-            } catch (err) {
-                console.error(`${err.name}, ${err.message}`);
-            }
-        }
+function position(pos){
+  let c=pos.coords,t=pos.timestamp||Date.now();
+  $('accuracy').textContent='GPS精度 ±'+Math.round(c.accuracy)+'m';
+  if(c.accuracy>50){status('GPS精度が低めです。空が開けた場所で待ってください。');return}
+  let p={lat:c.latitude,lng:c.longitude};
+  if(lastPos){
+    let d=dist(lastPos,p), dt=(t - lastPos.t)/1000;
+    // 異常値フィルター：短時間で移動しすぎている場合（時速35km以上など）はGPSジャンプとして除外
+    if(dt > 0 && (d / dt) > 10) return;
+    if(d>1.5&&d<80){
+      meters+=d; p.t = t; sample(t);
+      if(line){
+        line.addLatLng([p.lat,p.lng]);
+        if(!pin)pin=L.marker([p.lat,p.lng]).addTo(map);else pin.setLatLng([p.lat,p.lng]);
+        if(line.getLatLngs().length%4===0)map.panTo([p.lat,p.lng]);
+      }
+    }
+  }else{
+    p.t = t; sample(t);
+    if(map){map.setView([p.lat,p.lng],16);pin=L.marker([p.lat,p.lng]).addTo(map)}
+  }
+  lastPos=p;ui();check();
+}
 
-        function startRunning() {
-            if (isRunning) return;
-            isRunning = true;
-            totalDistance = 0;
-            startTime = new Date();
-            routeCoordinates = [];
-            polyline.setLatLngs([]);
+async function wake(){if(!$('wake').checked||!('wakeLock'in navigator))return;try{lock=await navigator.wakeLock.request('screen')}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&mode==='run')wake()});
 
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-            document.getElementById('statusDisplay').innerText = "走行中";
+function reset(){meters=0;elapsed=0;startAt=0;lastPos=null;samples=[];fired.clear();lastPaceAlert=0;if(line)line.setLatLngs([]);if(pin&&map){map.removeLayer(pin);pin=null}ui()}
 
-            requestWakeLock();
-            speak("さあスタートです！最初は焦らずリズムを作っていきましょう！");
+async function start(){
+  if(mode==='run')return;
+  if(!Number.isFinite(parse($('target').value))){status('目標ペースは 7:00 の形式で入力してください。');return}
+  
+  // iOS Safari対策：ユーザーインタラクションの瞬間に音声のウォームアップを実行
+  warmupSpeech();
 
-            // タイマー開始
-            timerInterval = setInterval(updateTimer, 1000);
+  if(mode==='ready'||mode==='done')reset();
+  if(mode==='pause'){
+    startAt=Date.now();mode='run';$('badge').textContent='RUNNING';$('pause').textContent='Ⅱ 一時停止';
+    watch=navigator.geolocation.watchPosition(position,e=>status('GPSエラー：'+e.message),{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+    await wake();return;
+  }
+  if(!navigator.geolocation){status('このブラウザではGPSを利用できません。');return}
+  mode='run';startAt=Date.now();$('badge').textContent='RUNNING';
+  $('start').disabled=true;$('pause').disabled=false;$('stop').disabled=false;
+  status('GPSを取得しています。最初の位置が取れるまでお待ちください。');
+  if($('mapToggle').checked)initMap();
+  watch=navigator.geolocation.watchPosition(position,e=>status('GPSエラー：'+e.message),{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+  await wake();
+  let r=rules.find(x=>x.type==='start'&&x.enabled);if(r){fired.add(r.id);play(r)}
+  tick();
+}
 
-            // GPSトラッキング開始
-            if (navigator.geolocation && !isSimulating) {
-                watchId = navigator.geolocation.watchPosition(updatePosition, handleGeoError, {
-                    enableHighAccuracy: true,
-                    maximumAge: 1000,
-                    timeout: 10000
-                });
-            }
-        }
+function tick(){if(mode!=='run')return;ui();check();setTimeout(tick,1000)}
 
-        function stopRunning() {
-            if (!isRunning) return;
-            isRunning = false;
-            if (isSimulating) toggleSimulation();
+function pause(){
+  if(mode!=='run')return;
+  elapsed+=(Date.now()-startAt)/1000;mode='pause';
+  if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null}
+  if(lock){lock.release();lock=null}
+  if('speechSynthesis'in window)speechSynthesis.cancel();
+  $('badge').textContent='PAUSED';$('pause').textContent='▶ 再開';status('一時停止中');ui();
+}
 
-            clearInterval(timerInterval);
-            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-            if (wakeLock !== null) wakeLock.release();
+function stop(){
+  if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null}
+  if(demoTimer){clearInterval(demoTimer);demoTimer=null}
+  $('stopDemo').disabled=true;$('demo').disabled=false;
+  if(lock){lock.release();lock=null}
+  if('speechSynthesis'in window)speechSynthesis.cancel();
+  if(mode==='run')elapsed+=(Date.now()-startAt)/1000;
+  mode='done';$('badge').textContent='FINISHED';
+  $('start').disabled=false;$('pause').disabled=true;$('stop').disabled=true;$('pause').textContent='Ⅱ 一時停止';
+  status(`終了：${(meters/1000).toFixed(2)} km ／ ${clock(elapsed)}`);ui();
+}
 
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-            document.getElementById('statusDisplay').innerText = "完了";
+$('start').onclick=start;
+$('pause').onclick=()=>mode==='pause'?start():pause();
+$('stop').onclick=stop;
+$('add').onclick=()=>{rules.push({id:uid(),type:'distance',value:1,text:'いい調子！そのままいこう！',voice:'coach',sound:'none',enabled:true});save();render()};
+$('load').onclick=()=>{if(mode==='run'){status('走行中はプリセットを変更できません。');return}rules=presets[$('preset').value]();save();render();status('プリセットを読み込みました。')};
+$('testVoice').onclick=()=>{warmupSpeech();speak('いい調子！自分のペースで気持ちよく走ろう！',$('voice').value)};
+$('testSound').onclick=fanfare;
 
-            speak("ゴール！お疲れ様でした！最高のランでしたね！");
-        }
+$('demo').onclick=()=>{
+  if(mode==='run'){status('先にGPS走行を終了してください。');return}
+  warmupSpeech();
+  reset();mode='run';startAt=Date.now();$('badge').textContent='DEMO';
+  $('start').disabled=true;$('pause').disabled=true;$('stop').disabled=false;$('demo').disabled=true;$('stopDemo').disabled=false;
+  let last=Date.now();sample(last);
+  let sr=rules.find(x=>x.type==='start'&&x.enabled);if(sr){fired.add(sr.id);play(sr)}
+  demoTimer=setInterval(()=>{
+    let now=Date.now(),dt=(now-last)/1000;last=now;
+    let km=meters/1000,target=parse($('target').value)||420,ps=km<.3?target+10:km<1?target-8:target+Math.sin(now/8000)*24;
+    meters+=dt*1000/ps;sample(now);ui();check();
+    if(meters/1000>=+$('goal').value)stop();
+  },1000);
+};
+$('stopDemo').onclick=stop;
 
-        function updateTimer() {
-            const now = new Date();
-            const elapsedSec = Math.floor((now - startTime) / 1000);
-            const min = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
-            const sec = String(elapsedSec % 60).padStart(2, '0');
-            document.getElementById('timeDisplay').innerText = `${min}:${sec}`;
-
-            // 簡易イベントチェック (例: 経過時間や距離に応じたランダム実況など)
-            checkTriggers(elapsedSec);
-        }
-
-        function updatePosition(position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const latLng = [lat, lng];
-
-            if (lastPosition) {
-                const dist = calculateDistance(lastPosition[0], lastPosition[1], lat, lng);
-                totalDistance += dist;
-            }
-            lastPosition = latLng;
-            routeCoordinates.push(latLng);
-
-            polyline.setLatLngs(routeCoordinates);
-            map.setView(latLng);
-
-            updateDisplayMetrics();
-        }
-
-        function handleGeoError(error) {
-            console.warn(`GPS Error: ${error.message}`);
-        }
-
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; // metres
-            const φ1 = lat1 * Math.PI/180;
-            const φ2 = lat2 * Math.PI/180;
-            const Δφ = (lat2-lat1) * Math.PI/180;
-            const Δλ = (lon2-lon1) * Math.PI/180;
-
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                      Math.cos(φ1) * Math.cos(φ2) *
-                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c; // metres
-        }
-
-        function updateDisplayMetrics() {
-            const distKm = totalDistance / 1000;
-            document.getElementById('distDisplay').innerText = distKm.toFixed(2);
-
-            // 簡易ペース計算
-            const elapsedSec = (new Date() - startTime) / 1000;
-            if (distKm > 0.05) {
-                const secPerKm = elapsedSec / distKm;
-                const pMin = Math.floor(secPerKm / 60);
-                const pSec = Math.floor(secPerKm % 60);
-                document.getElementById('paceDisplay').innerText = `${pMin}'${String(pSec).padStart(2,'0')}"`;
-            }
-        }
-
-        // 室内テスト用シミュレーター（ボタン一発で距離とペースを擬似進行させる）
-        function toggleSimulation() {
-            isSimulating = !isSimulating;
-            if (isSimulating) {
-                if (!isRunning) startRunning();
-                speak("デモ走行シミュレーションを開始します。");
-                
-                simInterval = setInterval(() => {
-                    totalDistance += 100; // 1秒ごとに100m進む設定
-                    const fakeLat = 35.1709 + (totalDistance / 100000);
-                    const fakeLng = 136.8815 + (totalDistance / 100000);
-                    routeCoordinates.push([fakeLat, fakeLng]);
-                    polyline.setLatLngs(routeCoordinates);
-                    map.setView([fakeLat, fakeLng]);
-                    
-                    updateDisplayMetrics();
-
-                    // 簡易的な距離トリガーのテスト
-                    const km = totalDistance / 1000;
-                    if (Math.abs(km - 1.0) < 0.05) {
-                        speak("1キロ通過！いい調子だね！", "woman");
-                    } else if (Math.abs(km - 3.0) < 0.05) {
-                        speak("がんばれェ！中間地点まですぐだよ！", "child");
-                    }
-                }, 1000);
-            } else {
-                clearInterval(simInterval);
-                speak("シミュレーションを終了します。");
-            }
-        }
-
-        function checkTriggers(elapsedSec) {
-            // 時間や距離に応じたカスタム発火ロジックをここに組み込めます
-        }
-    </script>
+render();ui();
+})();
+</script>
 </body>
 </html>
